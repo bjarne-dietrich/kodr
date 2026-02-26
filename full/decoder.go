@@ -3,7 +3,7 @@ package full
 import (
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals"
-	"github.com/itzmeanjan/kodr/kodr_internals/matrix"
+	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
 )
 
 type FullRLNCDecoder struct {

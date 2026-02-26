@@ -2,7 +2,7 @@ package full
 
 import (
 	"github.com/itzmeanjan/kodr/kodr_internals"
-	"github.com/itzmeanjan/kodr/kodr_internals/matrix"
+	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
 )
 
 type FullRLNCRecoder struct {
@@ -12,7 +12,7 @@ type FullRLNCRecoder struct {
 
 func (r *FullRLNCRecoder) fill() {
 	codingMatrix := make(matrix.Matrix, len(r.pieces))
-	
+
 	for i := range r.pieces {
 		codingMatrix[i] = make([]byte, len(r.pieces[i].Vector))
 		copy(codingMatrix[i], r.pieces[i].Vector)
@@ -28,7 +28,7 @@ func (r *FullRLNCRecoder) CodedPiece() (*kodr_internals.CodedPiece, error) {
 	pieceCount := uint(len(r.pieces))
 	vector := kodr_internals.GenerateCodingVector(pieceCount)
 	piece := make(kodr_internals.Piece, len(r.pieces[0].Piece))
-	
+
 	for i := range r.pieces {
 		piece.Multiply(r.pieces[i].Piece, vector[i])
 	}

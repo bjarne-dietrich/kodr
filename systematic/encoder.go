@@ -2,6 +2,7 @@ package systematic
 
 import (
 	"github.com/itzmeanjan/kodr/kodr_internals"
+	"github.com/itzmeanjan/kodr/kodr_internals/operations"
 )
 
 type SystematicRLNCEncoder struct {
@@ -99,7 +100,7 @@ func (s *SystematicRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 	piece := make(kodr_internals.Piece, s.PieceSize())
 
 	for i := range s.pieces {
-		piece.Multiply(s.pieces[i], vector[i])
+		operations.MulAddConst(piece, s.pieces[i], vector[i])
 	}
 
 	return &kodr_internals.CodedPiece{

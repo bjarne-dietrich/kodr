@@ -3,7 +3,7 @@ package systematic
 import (
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals"
-	"github.com/itzmeanjan/kodr/kodr_internals/matrix"
+	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
 )
 
 type SystematicRLNCDecoder struct {
@@ -59,6 +59,13 @@ func (s *SystematicRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error
 	s.state.Rref()
 	s.useful = s.state.Rank()
 	return nil
+}
+
+func (s *SystematicRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
+	return s.AddPiece(&kodr_internals.CodedPiece{
+		Vector: pieceBytes[:s.expected],
+		Piece:  pieceBytes[s.expected:],
+	})
 }
 
 // GetPiece - Get a decoded piece by index, may ( not ) succeed !

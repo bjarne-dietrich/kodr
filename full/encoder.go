@@ -2,6 +2,7 @@ package full
 
 import (
 	"github.com/itzmeanjan/kodr/kodr_internals"
+	"github.com/itzmeanjan/kodr/kodr_internals/operations"
 )
 
 type FullRLNCEncoder struct {
@@ -61,9 +62,11 @@ func (f *FullRLNCEncoder) Padding() uint {
 func (f *FullRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 	vector := kodr_internals.GenerateCodingVector(f.PieceCount())
 	piece := make(kodr_internals.Piece, f.PieceSize())
+
 	for i := range f.pieces {
-		piece.Multiply(f.pieces[i], vector[i])
+		operations.MulAddConst(piece, f.pieces[i], vector[i])
 	}
+
 	return &kodr_internals.CodedPiece{
 		Vector: vector,
 		Piece:  piece,
