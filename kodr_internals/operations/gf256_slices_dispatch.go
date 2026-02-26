@@ -13,7 +13,7 @@ func MulAddConst(dst, src []byte, c byte) {
 // MulConstNibble calculates dst[i] = src[i]*c
 // using a nibble table.
 func MulConstNibble(dst, src []byte, coef byte) {
-	mulAddConstNibbleImpl(dst, src, coef)
+	mulConstNibbleImpl(dst, src, coef)
 }
 
 // MulAddConstNibble calculates dst[i] += src[i]*c
