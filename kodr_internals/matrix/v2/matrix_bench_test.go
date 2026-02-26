@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/itzmeanjan/kodr/kodr_internals/matrix"
+	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
 )
 
 // Note: If fill_with_zero is set, it's not really a random matrix
@@ -23,9 +23,9 @@ func random_matrix(rows, cols int, fill_with_zero bool) [][]byte {
 }
 
 func BenchmarkMatrixRref(b *testing.B) {
-	// b.Run("2x2", func(b *testing.B) { rref(b, 1<<1) })
-	// b.Run("4x4", func(b *testing.B) { rref(b, 1<<2) })
-	// b.Run("8x8", func(b *testing.B) { rref(b, 1<<3) })
+	//b.Run("2x2", func(b *testing.B) { rref(b, 1<<1) })
+	//b.Run("4x4", func(b *testing.B) { rref(b, 1<<2) })
+	//b.Run("8x8", func(b *testing.B) { rref(b, 1<<3) })
 	b.Run("16x16", func(b *testing.B) { rref(b, 1<<4) })
 	b.Run("32x32", func(b *testing.B) { rref(b, 1<<5) })
 	b.Run("64x64", func(b *testing.B) { rref(b, 1<<6) })
@@ -33,6 +33,8 @@ func BenchmarkMatrixRref(b *testing.B) {
 	b.Run("256x256", func(b *testing.B) { rref(b, 1<<8) })
 	b.Run("512x512", func(b *testing.B) { rref(b, 1<<9) })
 	b.Run("1024x1024", func(b *testing.B) { rref(b, 1<<10) })
+	// b.Run("2048x2048", func(b *testing.B) { rref(b, 1<<11) })
+	// b.Run("4096x4096", func(b *testing.B) { rref(b, 1<<12) })
 }
 
 func rref(b *testing.B, dim int) {
