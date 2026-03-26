@@ -66,7 +66,9 @@ func TestVectorRoundtrip(t *testing.T) {
 		p := make([]byte, 128)
 		cp := &kodr_internals.CodedPiece{Vector: cv, Piece: p}
 		got := ssac.GetCodedPieceFromBytes(cp.Flatten(), ssac.DefaultQ0, ssac.DefaultQ1, pieceCount, sparsity)
-
+		if got == nil {
+			t.Fatalf("got nil, want non-nil")
+		}
 		if !bytes.Equal(got.Vector, v) {
 			t.Fatalf("vector mismatch")
 		}

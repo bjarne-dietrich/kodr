@@ -194,7 +194,7 @@ func (d *DecoderState) CoefficientMatrix() Matrix {
 }
 
 // Current state of coded piece matrix, which is updated
-// along side coding coefficient matrix ( during rref )
+// alongside coding coefficient matrix ( during rref )
 func (d *DecoderState) CodedPieceMatrix() Matrix {
 	return d.coded
 }

@@ -5,21 +5,21 @@ import (
 )
 
 type BitWriter struct {
-	buf     []byte
-	curByte byte
-	nbits   uint8 // number of bits currently filled in curByte
+	buf      []byte
+	curByte  byte
+	bitIndex uint8 // number of bits currently filled in curByte
 }
 
 func (w *BitWriter) WriteBit(bit bool) {
 	if bit {
-		w.curByte |= 1 << (7 - w.nbits)
+		w.curByte |= 1 << (7 - w.bitIndex)
 	}
-	w.nbits++
+	w.bitIndex++
 
-	if w.nbits == 8 {
+	if w.bitIndex == 8 {
 		w.buf = append(w.buf, w.curByte)
 		w.curByte = 0
-		w.nbits = 0
+		w.bitIndex = 0
 	}
 }
 
@@ -35,7 +35,7 @@ func (w *BitWriter) WriteBits(value uint32, n uint8) error {
 }
 
 func (w *BitWriter) Bytes() []byte {
-	if w.nbits > 0 {
+	if w.bitIndex > 0 {
 		return append(w.buf, w.curByte)
 	}
 	return w.buf

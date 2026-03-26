@@ -17,7 +17,7 @@ func (f *FullRLNCEncoder) PieceCount() uint {
 	return uint(len(f.pieces))
 }
 
-// Pieces which are coded together are all of same size
+// Pieces which are coded together are all same size
 //
 // Total data being coded = pieceSize * pieceCount ( may include
 // some padding bytes )
@@ -49,7 +49,7 @@ func (f *FullRLNCEncoder) CodedPieceLen() uint {
 }
 
 // How many extra padding bytes added at end of
-// original data slice so that splitted pieces are
+// original data slice so that split pieces are
 // all of same size ?
 func (f *FullRLNCEncoder) Padding() uint {
 	return f.extra

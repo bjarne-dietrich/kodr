@@ -16,12 +16,7 @@ type FullRLNCDecoder struct {
 // If no pieces are yet added to decoder state, then
 // returns 0, denoting **unknown**
 func (d *FullRLNCDecoder) PieceLength() uint {
-	if d.received > 0 {
-		coded := d.state.CodedPieceMatrix()
-		return coded.Cols()
-	}
-
-	return 0
+	return d.state.GetPieceLength()
 }
 
 // IsDecoded - Use it for checking whether more piece
@@ -60,8 +55,7 @@ func (d *FullRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
 		return nil
 	}
 
-	d.state.Rref()
-	d.useful = d.state.Rank()
+	d.useful = d.state.CalculateRank()
 	return nil
 }
 
@@ -71,8 +65,8 @@ func (d *FullRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
 // for this method to return something useful
 //
 // If M-many pieces are received among N-many expected ( read M <= N )
-// then pieces with index in [0..M] ( remember upper bound exclusive )
-// can be attempted to be consumed, given algebric structure has revealed
+// then pieces with index in [0...M] ( remember upper bound exclusive )
+// can be attempted to be consumed, given algebraic structure has revealed
 // requested piece at index `i`
 func (d *FullRLNCDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
 	return d.state.GetPiece(i)
@@ -88,7 +82,7 @@ func (d *FullRLNCDecoder) GetPieces() ([]kodr_internals.Piece, error) {
 	pieces := make([]kodr_internals.Piece, 0, d.useful)
 	for i := range d.useful {
 		// error mustn't happen at this point, it should
-		// have been returned fromvery first `if-block` in function
+		// have been returned from very first `if-block` in function
 		piece, err := d.GetPiece(uint(i))
 		if err != nil {
 			return nil, err

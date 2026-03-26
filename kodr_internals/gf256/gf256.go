@@ -48,7 +48,7 @@ type Gf256 struct {
 	val uint8
 }
 
-// New creates a new Gf256 element from a uint8 value
+// New creates a new Gf256 element from an uint8 value
 func New(val uint8) Gf256 {
 	return Gf256{val: val}
 }
@@ -76,7 +76,7 @@ func PrimitiveElement() Gf256 {
 // Inv computes the multiplicative inverse of the element. Returns nil for zero element
 func (g Gf256) Inv() (Gf256, error) {
 	if g == Zero() {
-		return Gf256{}, kodr.ErrCannotInvertGf256AdditiveIndentity
+		return Gf256{}, kodr.ErrCannotInvertGf256AdditiveIdentity
 	}
 
 	result := Gf256{
@@ -120,7 +120,7 @@ func (g Gf256) Mul(other Gf256) Gf256 {
 // Div performs division of two Gf256 elements using multiplicative inverse
 func (g Gf256) Div(other Gf256) (Gf256, error) {
 	if inv, err := other.Inv(); err != nil {
-		return Gf256{}, kodr.ErrCannotInvertGf256AdditiveIndentity
+		return Gf256{}, kodr.ErrCannotInvertGf256AdditiveIdentity
 	} else {
 		return g.Mul(inv), nil
 	}

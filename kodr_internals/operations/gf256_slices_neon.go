@@ -20,7 +20,7 @@ func xorAssignNEONASM(slicePtr, otherSlicePtr *byte, n uintptr)
 var mulAddConstImpl = mulAddConstNEON
 var mulAddConstNibbleImpl = mulAddConstNEON
 
-func mulAddConstNEON(dst, src []byte, coef byte) {
+func mulAddConstNEON(dst, src []byte, c byte) {
 	if len(src) != len(dst) {
 		panic("src and dst length do not match")
 	}
@@ -29,15 +29,15 @@ func mulAddConstNEON(dst, src []byte, coef byte) {
 	}
 
 	mulAddConstNibbleNEONASM(&dst[0], &src[0], uintptr(len(src)),
-		&nibbleTableLo[coef][0],
-		&nibbleTableHi[coef][0])
+		&nibbleTableLo[c][0],
+		&nibbleTableHi[c][0])
 
 }
 
 var mulConstImpl = mulConstNEON
 var mulConstNibbleImpl = mulConstNEON
 
-func mulConstNEON(dst, src []byte, coef byte) {
+func mulConstNEON(dst, src []byte, c byte) {
 	if len(src) != len(dst) {
 		panic("src and dst length do not match")
 	}
@@ -46,8 +46,8 @@ func mulConstNEON(dst, src []byte, coef byte) {
 	}
 
 	mulConstNibbleNEONASM(&dst[0], &src[0], uintptr(len(src)),
-		&nibbleTableLo[coef][0],
-		&nibbleTableHi[coef][0])
+		&nibbleTableLo[c][0],
+		&nibbleTableHi[c][0])
 
 }
 

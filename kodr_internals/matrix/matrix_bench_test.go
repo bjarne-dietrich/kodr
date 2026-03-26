@@ -41,11 +41,11 @@ func rref(b *testing.B, dim int) {
 
 	for b.Loop() {
 		b.StopTimer()
-		coeffs := random_matrix(dim, dim, false)
+		coefficients := random_matrix(dim, dim, false)
 		coded := random_matrix(dim, dim, true)
-		d_state := matrix.NewDecoderState(coeffs, coded)
+		decoderState := matrix.NewDecoderState(coefficients, coded)
 		b.StartTimer()
 
-		d_state.Rref()
+		decoderState.Rref()
 	}
 }

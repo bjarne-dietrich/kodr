@@ -28,7 +28,7 @@ func TestGf256Operations(t *testing.T) {
 		div, err := mul.Div(b)
 
 		if b == gf256.Zero() {
-			if err != kodr.ErrCannotInvertGf256AdditiveIndentity {
+			if err != kodr.ErrCannotInvertGf256AdditiveIdentity {
 				t.Errorf("Division by zero should return nil")
 			}
 		} else {

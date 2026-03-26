@@ -2,10 +2,10 @@ package kodr_internals_test
 
 import (
 	"bytes"
+	crand "crypto/rand"
 	"errors"
-	"math/rand"
+	"math/rand/v2"
 	"testing"
-	"time"
 
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/full"
@@ -16,16 +16,16 @@ import (
 // randomization source
 func generateData(n uint) []byte {
 	data := make([]byte, n)
-	// can safely ignore error
-	rand.Read(data)
+	retN, err := crand.Read(data)
+	if err != nil || retN != int(n) {
+		panic(err)
+	}
 	return data
 }
 
 func TestSplitDataByCount(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
-	size := uint(2<<10 + rand.Intn(2<<10))
-	count := uint(2<<1 + rand.Intn(int(size)))
+	size := 2<<10 + rand.N[uint](2<<10)
+	count := 2<<1 + rand.N(size)
 	data := generateData(size)
 
 	if _, _, err := kodr_internals.OriginalPiecesFromDataAndPieceCount(data, 0); !(err != nil && errors.Is(err, kodr.ErrBadPieceCount)) {
@@ -47,10 +47,8 @@ func TestSplitDataByCount(t *testing.T) {
 }
 
 func TestSplitDataBySize(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
-	size := uint(2<<10 + rand.Intn(2<<10))
-	pieceSize := uint(2<<1 + rand.Intn(int(size/2)))
+	size := 2<<10 + rand.N[uint](2<<10)
+	pieceSize := 2<<1 + rand.N(size/2)
 	data := generateData(size)
 
 	if _, _, err := kodr_internals.OriginalPiecesFromDataAndPieceSize(data, 0); !(err != nil && errors.Is(err, kodr.ErrZeroPieceSize)) {
@@ -86,8 +84,6 @@ func TestCodedPieceFlattening(t *testing.T) {
 }
 
 func TestCodedPiecesForRecoding(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-
 	size := 6
 	data := generateData(uint(size))
 	pieceCount := 3
@@ -110,15 +106,15 @@ func TestCodedPiecesForRecoding(t *testing.T) {
 		flattenedCodedPieces = append(flattenedCodedPieces, flat...)
 	}
 
-	if _, err := kodr_internals.CodedPiecesForRecoding(flattenedCodedPieces, uint(codedPieceCount)-2, uint(pieceCount)); !(err != nil && errors.Is(err, kodr.ErrCodedDataLengthMismatch)) {
+	if _, err := kodr_internals.CodedPiecesFromBytes(flattenedCodedPieces, uint(codedPieceCount)-2, uint(pieceCount)); !(err != nil && errors.Is(err, kodr.ErrCodedDataLengthMismatch)) {
 		t.Fatalf("expected: %s\n", kodr.ErrCodedDataLengthMismatch)
 	}
 
-	if _, err := kodr_internals.CodedPiecesForRecoding(flattenedCodedPieces, uint(codedPieceCount), uint(codedPieceCount)); !(err != nil && errors.Is(err, kodr.ErrCodingVectorLengthMismatch)) {
+	if _, err := kodr_internals.CodedPiecesFromBytes(flattenedCodedPieces, uint(codedPieceCount), uint(codedPieceCount)); !(err != nil && errors.Is(err, kodr.ErrCodingVectorLengthMismatch)) {
 		t.Fatalf("expected: %s\n", kodr.ErrCodingVectorLengthMismatch)
 	}
 
-	codedPieces_, err := kodr_internals.CodedPiecesForRecoding(flattenedCodedPieces, uint(codedPieceCount), uint(pieceCount))
+	codedPieces_, err := kodr_internals.CodedPiecesFromBytes(flattenedCodedPieces, uint(codedPieceCount), uint(pieceCount))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -134,23 +130,23 @@ func TestCodedPiecesForRecoding(t *testing.T) {
 }
 
 func TestIsSystematic(t *testing.T) {
-	piece_1 := kodr_internals.CodedPiece{Vector: []byte{0, 1, 0, 0}, Piece: []byte{1, 2, 3}}
-	if !piece_1.IsSystematic() {
-		t.Fatalf("%v should be systematic\n", piece_1)
+	piece1 := kodr_internals.CodedPiece{Vector: []byte{0, 1, 0, 0}, Piece: []byte{1, 2, 3}}
+	if !piece1.IsSystematic() {
+		t.Fatalf("%v should be systematic\n", piece1)
 	}
 
-	piece_2 := kodr_internals.CodedPiece{Vector: []byte{1, 1, 0, 0}, Piece: []byte{1, 2, 3}}
-	if piece_2.IsSystematic() {
-		t.Fatalf("%v shouldn't be systematic\n", piece_2)
+	piece2 := kodr_internals.CodedPiece{Vector: []byte{1, 1, 0, 0}, Piece: []byte{1, 2, 3}}
+	if piece2.IsSystematic() {
+		t.Fatalf("%v shouldn't be systematic\n", piece2)
 	}
 
-	piece_3 := kodr_internals.CodedPiece{Vector: []byte{0, 0, 1, 0}, Piece: []byte{1, 2, 3}}
-	if !piece_3.IsSystematic() {
-		t.Fatalf("%v should be systematic\n", piece_3)
+	piece3 := kodr_internals.CodedPiece{Vector: []byte{0, 0, 1, 0}, Piece: []byte{1, 2, 3}}
+	if !piece3.IsSystematic() {
+		t.Fatalf("%v should be systematic\n", piece3)
 	}
 
-	piece_4 := kodr_internals.CodedPiece{Vector: []byte{0, 0, 0, 0}, Piece: []byte{1, 2, 3}}
-	if piece_4.IsSystematic() {
-		t.Fatalf("%v shouldn't be systematic\n", piece_4)
+	piece4 := kodr_internals.CodedPiece{Vector: []byte{0, 0, 0, 0}, Piece: []byte{1, 2, 3}}
+	if piece4.IsSystematic() {
+		t.Fatalf("%v shouldn't be systematic\n", piece4)
 	}
 }

@@ -11,7 +11,7 @@ const ReducePolynomial byte = 0x1D
 
 func Inverse(of byte) (byte, error) {
 	if of == AdditiveIdentityElement {
-		return 0, kodr.ErrCannotInvertGf256AdditiveIndentity
+		return 0, kodr.ErrCannotInvertGf256AdditiveIdentity
 	}
 
 	return gf256InverseTable[of], nil
@@ -19,7 +19,7 @@ func Inverse(of byte) (byte, error) {
 
 func InverseAssign(a *byte) error {
 	if *a == AdditiveIdentityElement {
-		return kodr.ErrCannotInvertGf256AdditiveIndentity
+		return kodr.ErrCannotInvertGf256AdditiveIdentity
 	}
 
 	*a = gf256InverseTable[*a]

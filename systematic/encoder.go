@@ -18,7 +18,7 @@ func (s *SystematicRLNCEncoder) PieceCount() uint {
 	return uint(len(s.pieces))
 }
 
-// Pieces which are coded together are all of same size
+// Pieces which are coded together are all same size
 //
 // Total data being coded = pieceSize * pieceCount ( may include
 // some padding bytes )
@@ -70,7 +70,7 @@ func (s *SystematicRLNCEncoder) systematicCodingVector(idx uint) kodr_internals.
 
 // For systematic coding, first N-piece are returned in uncoded form
 // i.e. coding vectors are having only single non-zero element ( 1 )
-// in respective index of piece
+// in respective index of piece.
 //
 // Piece index `i` ( returned from this method ), where i < N
 // is going to have coding vector = [N]byte, where only i'th index
@@ -109,7 +109,7 @@ func (s *SystematicRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 	}
 }
 
-// When you've already splitted original data chunk into pieces
+// When you've already split original data chunk into pieces
 // of same length ( in terms of bytes ), this function can be used
 // for creating one systematic RLNC encoder, which delivers coded pieces
 // on-the-fly

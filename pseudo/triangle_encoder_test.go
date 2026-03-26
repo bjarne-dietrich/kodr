@@ -1,8 +1,7 @@
-package triangle_test
+package pseudo_test
 
 import (
 	"bytes"
-	"crypto/rand"
 	"errors"
 	"math"
 	mathrand "math/rand"
@@ -10,38 +9,20 @@ import (
 
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals"
-	"github.com/itzmeanjan/kodr/pseudo/triangle"
+	"github.com/itzmeanjan/kodr/kodr_internals/testutils"
+	"github.com/itzmeanjan/kodr/pseudo"
 )
 
-// Generates `N`-bytes of random data from default
-// randomization source
-func generateData(n uint) []byte {
-	data := make([]byte, n)
-	// can safely ignore error
-	rand.Read(data)
-	return data
-}
-
-// Generates N-many pieces each of M-bytes length, to be used
-// for testing purposes
-func generatePieces(pieceCount uint, pieceLength uint) []kodr_internals.Piece {
-	pieces := make([]kodr_internals.Piece, 0, pieceCount)
-	for range pieceCount {
-		pieces = append(pieces, generateData(pieceLength))
-	}
-	return pieces
-}
-
-func TestNewPseudoRLNC(t *testing.T) {
+func TestNewTrianglePseudoRLNC(t *testing.T) {
 	t.Run("Encoder", func(t *testing.T) {
 		var (
 			pieceCount  uint = 1 << 8
 			pieceLength uint = 8192
 		)
 
-		pieces := generatePieces(pieceCount, pieceLength)
-		enc := triangle.NewTrianglePRLNCEncoder(pieces)
-		dec := triangle.NewTrianglePRLNCDecoder(pieceCount)
+		pieces := testutils.GeneratePieces(pieceCount, pieceLength)
+		enc := pseudo.NewTrianglePRLNCEncoder(pieces)
+		dec := pseudo.NewTrianglePRLNCDecoder(pieceCount)
 
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
@@ -49,9 +30,9 @@ func TestNewPseudoRLNC(t *testing.T) {
 	t.Run("EncoderWithPieceCount", func(t *testing.T) {
 		size := uint(2<<10 + mathrand.Intn(2<<10))
 		pieceCount := uint(2<<1 + mathrand.Intn(2<<8))
-		data := generateData(size)
+		data := testutils.RandomData(size)
 
-		enc, err := triangle.NewTrianglePRLNCEncoderWithPieceCount(data, pieceCount)
+		enc, err := pseudo.NewTrianglePRLNCEncoderWithPieceCount(data, pieceCount)
 		if err != nil {
 			t.Fatalf("Error: %s\n", err.Error())
 		}
@@ -61,7 +42,7 @@ func TestNewPseudoRLNC(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
-		dec := triangle.NewTrianglePRLNCDecoder(pieceCount)
+		dec := pseudo.NewTrianglePRLNCDecoder(pieceCount)
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
 
@@ -69,9 +50,9 @@ func TestNewPseudoRLNC(t *testing.T) {
 		size := uint(2<<10 + mathrand.Intn(2<<10))
 		pieceSize := uint(2<<5 + mathrand.Intn(2<<5))
 		pieceCount := uint(math.Ceil(float64(size) / float64(pieceSize)))
-		data := generateData(size)
+		data := testutils.RandomData(size)
 
-		enc, err := triangle.NewTrianglePRLNCEncoderWithPieceSize(data, pieceSize)
+		enc, err := pseudo.NewTrianglePRLNCEncoderWithPieceSize(data, pieceSize)
 		if err != nil {
 			t.Fatalf("Error: %s\n", err.Error())
 		}
@@ -81,12 +62,12 @@ func TestNewPseudoRLNC(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
-		dec := triangle.NewTrianglePRLNCDecoder(pieceCount)
+		dec := pseudo.NewTrianglePRLNCDecoder(pieceCount)
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
 }
 
-func encoderFlow(t *testing.T, enc *triangle.TrianglePRLNCEncoder, dec *triangle.TrianglePRLNCDecoder, pieceCount uint, pieces []kodr_internals.Piece) {
+func encoderFlow(t *testing.T, enc *pseudo.TrianglePRLNCEncoder, dec *pseudo.TrianglePRLNCDecoder, pieceCount uint, pieces []kodr_internals.Piece) {
 	for {
 		c_piece := enc.CodedPiece()
 
@@ -115,14 +96,14 @@ func encoderFlow(t *testing.T, enc *triangle.TrianglePRLNCEncoder, dec *triangle
 	}
 }
 
-func TestPseudoRLNCEncoder_Padding(t *testing.T) {
+func TestTrianglePseudoRLNCEncoder_Padding(t *testing.T) {
 	t.Run("WithPieceCount", func(t *testing.T) {
 		for range 1 << 5 {
 			size := uint(2<<10 + mathrand.Intn(2<<10))
 			pieceCount := uint(2<<1 + mathrand.Intn(2<<8))
-			data := generateData(size)
+			data := testutils.RandomData(size)
 
-			enc, err := triangle.NewTrianglePRLNCEncoderWithPieceCount(data, pieceCount)
+			enc, err := pseudo.NewTrianglePRLNCEncoderWithPieceCount(data, pieceCount)
 			if err != nil {
 				t.Fatalf("Error: %s\n", err.Error())
 			}
@@ -141,9 +122,9 @@ func TestPseudoRLNCEncoder_Padding(t *testing.T) {
 			size := uint(2<<10 + mathrand.Intn(2<<10))
 			pieceSize := uint(2<<5 + mathrand.Intn(2<<5))
 			pieceCount := uint(math.Ceil(float64(size) / float64(pieceSize)))
-			data := generateData(size)
+			data := testutils.RandomData(size)
 
-			enc, err := triangle.NewTrianglePRLNCEncoderWithPieceSize(data, pieceSize)
+			enc, err := pseudo.NewTrianglePRLNCEncoderWithPieceSize(data, pieceSize)
 			if err != nil {
 				t.Fatalf("Error: %s\n", err.Error())
 			}

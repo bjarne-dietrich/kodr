@@ -2,15 +2,16 @@ package operations
 
 import (
 	"crypto/rand"
-	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMulConstGeneric(t *testing.T) {
 	a, refA, b, c := generateRandomData(1023)
 	mulConstRef(refA, b, c)
 	mulConstGeneric(a, b, c)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 
 }
 
@@ -18,7 +19,7 @@ func TestMulAddConstGeneric(t *testing.T) {
 	a, refA, b, c := generateRandomData(1023)
 	mulAddConstRef(refA, b, c)
 	mulAddConstGeneric(a, b, c)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func TestMulConstTableGeneric(t *testing.T) {
@@ -26,8 +27,7 @@ func TestMulConstTableGeneric(t *testing.T) {
 	mulConstRef(refA, b, c)
 	table := BuildMulTable(c)
 	mulConstTableGeneric(a, b, &table)
-
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func TestMulAddConstTableGeneric(t *testing.T) {
@@ -35,28 +35,28 @@ func TestMulAddConstTableGeneric(t *testing.T) {
 	mulAddConstRef(refA, b, c)
 	table := BuildMulTable(c)
 	mulAddConstTableGeneric(a, b, &table)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func TestMulConstNibbleGeneric(t *testing.T) {
 	a, refA, b, c := generateRandomData(1023)
 	mulConstRef(refA, b, c)
 	mulConstNibbleGeneric(a, b, c)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func TestMulAddConstNibbleGeneric(t *testing.T) {
 	a, refA, b, c := generateRandomData(1023)
 	mulAddConstRef(refA, b, c)
 	mulAddConstNibbleGeneric(a, b, c)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func TestXorAssignSliceGeneric(t *testing.T) {
 	a, refA, b, _ := generateRandomData(1023)
-	mulAddConstRef(refA, b, 1)
+	mulAddConstRef(refA, b, 1) // XOR is the same as adding b*1
 	xorAssignSliceGeneric(a, b)
-	assertEqual(t, refA, a)
+	assert.Equal(t, refA, a)
 }
 
 func randBytes(n int) []byte {
@@ -91,14 +91,6 @@ func generateRandomData(n int) ([]byte, []byte, []byte, byte) {
 	copy(a2, a1)
 
 	return a1, a2, b, c
-}
-
-func assertEqual(t *testing.T, reference, result []byte) {
-	if slices.Compare(reference, result) != 0 {
-		t.Log("Result: ", result)
-		t.Log("Expected: ", reference)
-		t.Error("result mismatch")
-	}
 }
 
 func peasantsAlgorithm(a, b byte) byte {

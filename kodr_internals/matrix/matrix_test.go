@@ -96,13 +96,13 @@ func TestMatrixMultiplication(t *testing.T) {
 		t.Fatal("expected failed matrix multiplication error indication")
 	}
 
-	mult, err := m_1.Multiply(m_2)
+	mul, err := m_1.Multiply(m_2)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
 	for i := 0; i < int(expected.Rows()); i++ {
-		if !bytes.Equal(expected[i], mult[i]) {
+		if !bytes.Equal(expected[i], mul[i]) {
 			t.Fatal("row mismatch !")
 		}
 	}

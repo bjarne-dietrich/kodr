@@ -47,7 +47,7 @@ func mulConstTableGeneric(dst, src []byte, table *MulTable) {
 
 // mulConstNibbleGeneric calculates dst[i] += src[i]*c
 // using a nibble table.
-func mulConstNibbleGeneric(dst, src []byte, coef byte) {
+func mulConstNibbleGeneric(dst, src []byte, c byte) {
 	if len(src) != len(dst) {
 		panic("src and dst length do not match")
 	}
@@ -55,8 +55,8 @@ func mulConstNibbleGeneric(dst, src []byte, coef byte) {
 		return
 	}
 
-	hi := nibbleTableHi[coef]
-	lo := nibbleTableLo[coef]
+	hi := nibbleTableHi[c]
+	lo := nibbleTableLo[c]
 	for i := 0; i < len(src); i++ {
 		dst[i] = hi[(src[i]>>4)] ^ lo[(src[i]&0xf)]
 	}
@@ -65,7 +65,7 @@ func mulConstNibbleGeneric(dst, src []byte, coef byte) {
 
 // mulAddConstNibbleGeneric calculates dst[i] += src[i]*c
 // using a nibble table.
-func mulAddConstNibbleGeneric(dst, src []byte, coef byte) {
+func mulAddConstNibbleGeneric(dst, src []byte, c byte) {
 	if len(src) != len(dst) {
 		panic("src and dst length do not match")
 	}
@@ -73,8 +73,8 @@ func mulAddConstNibbleGeneric(dst, src []byte, coef byte) {
 		return
 	}
 
-	hi := nibbleTableHi[coef]
-	lo := nibbleTableLo[coef]
+	hi := nibbleTableHi[c]
+	lo := nibbleTableLo[c]
 	for i := 0; i < len(src); i++ {
 		dst[i] ^= hi[(src[i]>>4)] ^ lo[(src[i]&0xf)]
 	}

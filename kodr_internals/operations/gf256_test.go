@@ -3,18 +3,16 @@ package operations_test
 import (
 	"testing"
 
+	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals/operations"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInverse(t *testing.T) {
 	for i := 1; i < 256; i++ {
 		inv, err := operations.Inverse(byte(i))
-		if err != nil {
-			t.Error(err)
-		}
-		if operations.Mul(inv, byte(i)) != operations.MultiplicativeIdentityElement {
-			t.Error("Inverse result mismatch")
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, operations.MultiplicativeIdentityElement, operations.Mul(inv, byte(i)), "Inverse Check failed")
 	}
 }
 
@@ -22,21 +20,15 @@ func TestAssignInverse(t *testing.T) {
 	for i := 1; i < 256; i++ {
 		bi := byte(i)
 		err := operations.InverseAssign(&bi)
-		if err != nil {
-			t.Error(err)
-		}
-		if operations.Mul(bi, byte(i)) != operations.MultiplicativeIdentityElement {
-			t.Error("Inverse result mismatch")
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, operations.MultiplicativeIdentityElement, operations.Mul(bi, byte(i)), "Inverse Check failed")
 	}
 }
 
 func TestAdd(t *testing.T) {
 	for a := 0; a < 256; a++ {
 		for b := 0; b < 256; b++ {
-			if operations.Add(byte(a), byte(b)) != byte(a)^byte(b) {
-				t.Error("Add result mismatch")
-			}
+			assert.Equal(t, byte(a)^byte(b), operations.Add(byte(a), byte(b)))
 		}
 	}
 }
@@ -46,9 +38,7 @@ func TestAddAssign(t *testing.T) {
 		for b := 0; b < 256; b++ {
 			ba := byte(a)
 			operations.AddAssign(&ba, byte(b))
-			if ba != byte(a)^byte(b) {
-				t.Error("Add result mismatch")
-			}
+			assert.Equal(t, byte(a)^byte(b), ba)
 		}
 	}
 }
@@ -56,9 +46,7 @@ func TestAddAssign(t *testing.T) {
 func TestSub(t *testing.T) {
 	for a := 0; a < 256; a++ {
 		for b := 0; b < 256; b++ {
-			if operations.Sub(byte(a), byte(b)) != byte(a)^byte(b) {
-				t.Error("Sub result mismatch")
-			}
+			assert.Equal(t, byte(a)^byte(b), operations.Sub(byte(a), byte(b)))
 		}
 	}
 }
@@ -68,9 +56,7 @@ func TestSubAssign(t *testing.T) {
 		for b := 0; b < 256; b++ {
 			ba := byte(a)
 			operations.SubAssign(&ba, byte(b))
-			if ba != byte(a)^byte(b) {
-				t.Error("Sub result mismatch")
-			}
+			assert.Equal(t, byte(a)^byte(b), ba)
 		}
 	}
 }
@@ -78,9 +64,7 @@ func TestSubAssign(t *testing.T) {
 func TestMul(t *testing.T) {
 	for a := 0; a < 256; a++ {
 		for b := 0; b < 256; b++ {
-			if operations.Mul(byte(a), byte(b)) != peasantsAlgorithm(byte(a), byte(b)) {
-				t.Error("Mul result mismatch")
-			}
+			assert.Equal(t, peasantsAlgorithm(byte(a), byte(b)), operations.Mul(byte(a), byte(b)))
 		}
 	}
 }
@@ -90,9 +74,7 @@ func TestMulAssign(t *testing.T) {
 		for b := 0; b < 256; b++ {
 			ba := byte(a)
 			operations.MulAssign(&ba, byte(b))
-			if ba != peasantsAlgorithm(byte(a), byte(b)) {
-				t.Error("Mul result mismatch")
-			}
+			assert.Equal(t, peasantsAlgorithm(byte(a), byte(b)), ba)
 		}
 	}
 }
@@ -102,9 +84,7 @@ func TestMulAssign2(t *testing.T) {
 		for b := 0; b < 256; b++ {
 			res := byte(0)
 			operations.MulAssign2(&res, byte(a), byte(b))
-			if res != peasantsAlgorithm(byte(a), byte(b)) {
-				t.Error("Mul result mismatch")
-			}
+			assert.Equal(t, peasantsAlgorithm(byte(a), byte(b)), res)
 		}
 	}
 }
@@ -112,16 +92,18 @@ func TestMulAssign2(t *testing.T) {
 func TestDiv(t *testing.T) {
 	for a := 0; a < 256; a++ {
 		for b := 0; b < 256; b++ {
-			if invb, err := operations.Inverse(byte(b)); err != nil {
-				if byte(b) == operations.AdditiveIdentityElement {
-					continue
-				}
-			} else if div, err2 := operations.Div(byte(a), byte(b)); err2 != nil {
-				t.Error(err2)
-			} else if div != peasantsAlgorithm(invb, byte(a)) {
-				t.Error("Div result mismatch")
+			inverse, err := operations.Inverse(byte(b))
+
+			if byte(b) == operations.AdditiveIdentityElement {
+				assert.ErrorIs(t, err, kodr.ErrCannotInvertGf256AdditiveIdentity)
+				continue
 			}
 
+			assert.Nil(t, err)
+
+			div, err := operations.Div(byte(a), byte(b))
+			assert.Nil(t, err)
+			assert.Equal(t, peasantsAlgorithm(inverse, byte(a)), div)
 		}
 	}
 }
@@ -130,15 +112,18 @@ func TestDivAssign(t *testing.T) {
 	for a := 0; a < 256; a++ {
 		for b := 0; b < 256; b++ {
 			div := byte(a)
-			if invb, err := operations.Inverse(byte(b)); err != nil {
-				if byte(b) == operations.AdditiveIdentityElement {
-					continue
-				}
-			} else if err2 := operations.DivAssign(&div, byte(b)); err2 != nil {
-				t.Error(err2)
-			} else if div != peasantsAlgorithm(invb, byte(a)) {
-				t.Error("Div result mismatch")
+			inverse, err := operations.Inverse(byte(b))
+
+			if byte(b) == operations.AdditiveIdentityElement {
+				assert.ErrorIs(t, err, kodr.ErrCannotInvertGf256AdditiveIdentity)
+				continue
 			}
+
+			assert.Nil(t, err)
+
+			err = operations.DivAssign(&div, byte(b))
+			assert.Nil(t, err)
+			assert.Equal(t, peasantsAlgorithm(inverse, byte(a)), div)
 
 		}
 	}
@@ -154,11 +139,7 @@ func TestPow(t *testing.T) {
 				operations.MulAssign(&refPow, byte(a))
 			}
 
-			if pow != refPow {
-				t.Log("a", a, "b", b, "pow", pow)
-				t.Log("refPow", refPow)
-				t.Error("Pow result mismatch")
-			}
+			assert.Equal(t, refPow, pow)
 		}
 	}
 }
@@ -174,11 +155,7 @@ func TestPowAssign(t *testing.T) {
 				operations.MulAssign(&refPow, byte(a))
 			}
 
-			if pow != refPow {
-				t.Log("a", a, "b", b, "pow", pow)
-				t.Log("refPow", refPow)
-				t.Error("Pow result mismatch")
-			}
+			assert.Equal(t, refPow, pow)
 		}
 	}
 }

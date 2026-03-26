@@ -1,4 +1,4 @@
-package diagonal
+package base
 
 import (
 	"github.com/itzmeanjan/kodr"
@@ -6,7 +6,7 @@ import (
 	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
 )
 
-type DiagonalPRLNCDecoder struct {
+type BaseDecoder struct {
 	expected, useful, received uint
 	state                      *matrix.DecoderState
 }
@@ -15,28 +15,27 @@ type DiagonalPRLNCDecoder struct {
 //
 // Note: If no pieces are yet added to decoder state, then
 // returns 0, denoting **unknown**
-func (p *DiagonalPRLNCDecoder) PieceLength() uint {
-	if p.received > 0 {
-		coded := p.state.CodedPieceMatrix()
-		return coded.Cols()
-	}
+func (d *BaseDecoder) PieceLength() uint {
+	return d.state.GetPieceLength()
+}
 
-	return 0
+func (d *BaseDecoder) GetExpectedPieceCount() uint {
+	return d.expected
 }
 
 // Already decoded back to original pieces, with collected pieces ?
 //
 // If yes, no more pieces need to be collected
-func (p *DiagonalPRLNCDecoder) IsDecoded() bool {
-	return p.useful >= p.expected
+func (d *BaseDecoder) IsDecoded() bool {
+	return d.useful >= d.expected
 }
 
 // How many more pieces are required to be collected so that
 // whole data can be decoded successfully ?
 //
 // After collecting these many pieces, original data can be decoded
-func (p *DiagonalPRLNCDecoder) Required() uint {
-	return p.expected - p.useful
+func (d *BaseDecoder) Required() uint {
+	return d.expected - d.useful
 }
 
 // Add one more collected coded piece, which will be used for decoding
@@ -44,26 +43,19 @@ func (p *DiagonalPRLNCDecoder) Required() uint {
 //
 // If all required pieces are already collected i.e. successful decoding
 // has happened --- new pieces to be discarded, with an error denoting same
-func (p *DiagonalPRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
-	return p.AddPieceBytes(piece.Flatten())
-}
-
-func (p *DiagonalPRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
-	if p.IsDecoded() {
+func (d *BaseDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
+	if d.IsDecoded() {
 		return kodr.ErrAllUsefulPiecesReceived
 	}
 
-	codedPiece := GetCodedPieceFromBytes(pieceBytes, p.expected)
-
-	p.state.AddPiece(codedPiece)
-	p.received++
-	if p.received < 2 {
-		p.useful++
+	d.state.AddPiece(piece)
+	d.received++
+	if d.received < 2 {
+		d.useful++
 		return nil
 	}
 
-	p.state.Rref()
-	p.useful = p.state.Rank()
+	d.useful = d.state.CalculateRank()
 	return nil
 }
 
@@ -73,22 +65,22 @@ func (p *DiagonalPRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 // for this method to return something useful
 //
 // If M-many pieces are received among N-many expected ( read M <= N )
-// then pieces with index in [0..M] ( remember upper bound exclusive )
-// can be attempted to be consumed, given algebric structure has revealed
+// then pieces with index in [0...M] ( remember upper bound exclusive )
+// can be attempted to be consumed, given algebraic structure has revealed
 // requested piece at index `i`
-func (p *DiagonalPRLNCDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
-	return p.state.GetPiece(i)
+func (d *BaseDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
+	return d.state.GetPiece(i)
 }
 
 // All original pieces in order --- only when full decoding has happened
-func (p *DiagonalPRLNCDecoder) GetPieces() ([]kodr_internals.Piece, error) {
-	if !p.IsDecoded() {
+func (d *BaseDecoder) GetPieces() ([]kodr_internals.Piece, error) {
+	if !d.IsDecoded() {
 		return nil, kodr.ErrMoreUsefulPiecesRequired
 	}
 
-	pieces := make([]kodr_internals.Piece, 0, p.useful)
-	for i := range p.useful {
-		piece, err := p.GetPiece(i)
+	pieces := make([]kodr_internals.Piece, 0, d.useful)
+	for i := range d.useful {
+		piece, err := d.GetPiece(i)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +91,7 @@ func (p *DiagonalPRLNCDecoder) GetPieces() ([]kodr_internals.Piece, error) {
 	return pieces, nil
 }
 
-func NewPseudoRLNCDecoder(pieceCount uint) *DiagonalPRLNCDecoder {
+func NewBaseDecoder(pieceCount uint) *BaseDecoder {
 	state := matrix.NewDecoderStateWithPieceCount(pieceCount)
-	return &DiagonalPRLNCDecoder{expected: pieceCount, state: state}
+	return &BaseDecoder{expected: pieceCount, state: state}
 }

@@ -16,12 +16,7 @@ type SystematicRLNCDecoder struct {
 // Note: If no pieces are yet added to decoder state, then
 // returns 0, denoting **unknown**
 func (s *SystematicRLNCDecoder) PieceLength() uint {
-	if s.received > 0 {
-		coded := s.state.CodedPieceMatrix()
-		return coded.Cols()
-	}
-
-	return 0
+	return s.state.GetPieceLength()
 }
 
 // Already decoded back to original pieces, with collected pieces ?
@@ -56,8 +51,7 @@ func (s *SystematicRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error
 		return nil
 	}
 
-	s.state.Rref()
-	s.useful = s.state.Rank()
+	s.useful = s.state.CalculateRank()
 	return nil
 }
 
@@ -74,8 +68,8 @@ func (s *SystematicRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 // for this method to return something useful
 //
 // If M-many pieces are received among N-many expected ( read M <= N )
-// then pieces with index in [0..M] ( remember upper bound exclusive )
-// can be attempted to be consumed, given algebric structure has revealed
+// then pieces with index in [0...M] ( remember upper bound exclusive )
+// can be attempted to be consumed, given algebraic structure has revealed
 // requested piece at index `i`
 func (s *SystematicRLNCDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
 	return s.state.GetPiece(i)

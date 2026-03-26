@@ -34,13 +34,13 @@ func (r *FullRLNCRecoder) CodedPiece() (*kodr_internals.CodedPiece, error) {
 	}
 
 	vector_ := matrix.Matrix{vector}
-	mult, err := vector_.Multiply(r.codingMatrix)
+	mul, err := vector_.Multiply(r.codingMatrix)
 	if err != nil {
 		return nil, err
 	}
 
 	return &kodr_internals.CodedPiece{
-		Vector: mult[0],
+		Vector: mul[0],
 		Piece:  piece,
 	}, nil
 }
@@ -57,11 +57,11 @@ func NewFullRLNCRecoder(pieces []*kodr_internals.CodedPiece) *FullRLNCRecoder {
 }
 
 // A byte slice which is formed by concatenating coded pieces,
-// will be splitted into structured coded pieces ( read having two components
+// will be split into structured coded pieces ( read having two components
 // i.e. coding vector & piece ) & recoder to be returned, which can be used
 // for on-the-fly random piece recoding
 func NewFullRLNCRecoderWithFlattenData(data []byte, pieceCount uint, piecesCodedTogether uint) (*FullRLNCRecoder, error) {
-	codedPieces, err := kodr_internals.CodedPiecesForRecoding(data, pieceCount, piecesCodedTogether)
+	codedPieces, err := kodr_internals.CodedPiecesFromBytes(data, pieceCount, piecesCodedTogether)
 	if err != nil {
 		return nil, err
 	}

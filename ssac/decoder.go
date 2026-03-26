@@ -17,19 +17,14 @@ type SSACRLNCDecoder struct {
 // Note: If no pieces are yet added to decoder state, then
 // returns 0, denoting **unknown**
 func (p *SSACRLNCDecoder) PieceLength() uint {
-	if p.received > 0 {
-		coded := p.state.CodedPieceMatrix()
-		return coded.Cols()
-	}
-
-	return 0
+	return p.state.GetPieceLength()
 }
 
 // Already decoded back to original pieces, with collected pieces ?
 //
 // If yes, no more pieces need to be collected
 func (p *SSACRLNCDecoder) IsDecoded() bool {
-	return p.state.Rank() >= p.expected
+	return p.state.GetNumberOfPieces() >= p.expected
 }
 
 // How many more pieces are required to be collected so that
@@ -63,8 +58,7 @@ func (p *SSACRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 		return nil
 	}
 
-	p.state.Rref()
-	p.useful = p.state.Rank()
+	p.useful = p.state.CalculateRank()
 	return nil
 }
 
@@ -75,7 +69,7 @@ func (p *SSACRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 //
 // If M-many pieces are received among N-many expected ( read M <= N )
 // then pieces with index in [0...M] ( remember upper bound exclusive )
-// can be attempted to be consumed, given algebric structure has revealed
+// can be attempted to be consumed, given algebraic structure has revealed
 // requested piece at index `i`
 func (p *SSACRLNCDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
 	return p.state.GetPiece(i)

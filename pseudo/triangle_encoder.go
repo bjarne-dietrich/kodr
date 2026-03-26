@@ -1,35 +1,15 @@
-package triangle
+package pseudo
 
 import (
 	"encoding/binary"
 
 	"github.com/itzmeanjan/kodr/kodr_internals"
+	"github.com/itzmeanjan/kodr/kodr_internals/base"
 	"github.com/itzmeanjan/kodr/kodr_internals/operations"
 )
 
 type TrianglePRLNCEncoder struct {
-	currentPieceId uint
-	pieces         []kodr_internals.Piece
-	extra          uint
-}
-
-// PieceCount returns total #-of pieces being coded together --- denoting
-// these many linearly independent pieces are required
-// successfully decoding back to original pieces
-func (p *TrianglePRLNCEncoder) PieceCount() uint {
-	return uint(len(p.pieces))
-}
-
-// PieceSize returns size of one piece
-// Total data being coded = pieceSize * pieceCount + padding
-func (p *TrianglePRLNCEncoder) PieceSize() uint {
-	return uint(len(p.pieces[0]))
-}
-
-// Padding returns the number of extra padding bytes added at end of original
-// data slice for making all pieces of same size
-func (p *TrianglePRLNCEncoder) Padding() uint {
-	return p.extra
+	base.BaseEncoder
 }
 
 // CodedPiece returns subsequent coded pieces
@@ -37,26 +17,29 @@ func (p *TrianglePRLNCEncoder) Padding() uint {
 // Instead of the coding Vector, CodedPiece().Vector contains the index of the piece as an Uvarint
 func (p *TrianglePRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 
-	vector := CodingVector(p.currentPieceId, p.PieceCount())
+	pieceID := p.GetCurrentPieceId()
+	pieceCount := p.PieceCount()
+
+	vector := TriangleCodingVector(pieceID, pieceCount)
 	piece := make(kodr_internals.Piece, p.PieceSize())
 
-	if p.currentPieceId < p.PieceCount() {
-		for i := range p.currentPieceId + 1 {
-			operations.XorAssignSlice(piece, p.pieces[i])
+	if pieceID < pieceCount {
+		for i := range pieceID + 1 {
+			operations.XorAssignSlice(piece, *p.GetPiece(i))
 		}
 	} else {
-		for i := range p.pieces {
+		for i := range pieceCount {
 			if vector[i] == 1 {
-				operations.XorAssignSlice(piece, p.pieces[i])
+				operations.XorAssignSlice(piece, *p.GetPiece(i))
 			}
 		}
 	}
 
 	codedPiece := &kodr_internals.CodedPiece{
-		Vector: binary.AppendUvarint(nil, uint64(p.currentPieceId)),
+		Vector: binary.AppendUvarint(nil, uint64(pieceID)),
 		Piece:  piece,
 	}
-	p.currentPieceId++
+	p.IncrementCurrentPieceId()
 	return codedPiece
 }
 
@@ -64,33 +47,27 @@ func (p *TrianglePRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 // into pieces of same length ( in terms of bytes ), and returns a TrianglePRLNCEncoder,
 // which delivers coded pieces on-the-fly
 func NewTrianglePRLNCEncoder(pieces []kodr_internals.Piece) *TrianglePRLNCEncoder {
-	return &TrianglePRLNCEncoder{currentPieceId: 0, pieces: pieces}
+	return &TrianglePRLNCEncoder{BaseEncoder: *base.NewBaseEncoder(pieces)}
 }
 
 // NewTrianglePRLNCEncoderWithPieceCount returns a TrianglePRLNCEncoder
 // and splits the data into pieceCount same sized pieces,
 // appending zero-padding to data if needed.
 func NewTrianglePRLNCEncoderWithPieceCount(data []byte, pieceCount uint) (*TrianglePRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceCount(data, pieceCount)
+	encoder, err := base.NewBaseEncoderWithPieceCount(data, pieceCount)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewTrianglePRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &TrianglePRLNCEncoder{*encoder}, nil
 }
 
 // NewTrianglePRLNCEncoderWithPieceSize returns a TrianglePRLNCEncoder
 // and splits the data into pieces with a size of pieceSize,
 // appending zero-padding to data if needed.
 func NewTrianglePRLNCEncoderWithPieceSize(data []byte, pieceSize uint) (*TrianglePRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceSize(data, pieceSize)
+	encoder, err := base.NewBaseEncoderWithPieceSize(data, pieceSize)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewTrianglePRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &TrianglePRLNCEncoder{*encoder}, nil
 }

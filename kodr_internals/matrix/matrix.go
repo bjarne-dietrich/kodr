@@ -7,7 +7,7 @@ import (
 
 type Matrix [][]byte
 
-// Cell by cell value comparision of two matrices, which
+// Cell by cell value comparison of two matrices, which
 // returns `true` only if all cells are found to be equal
 func (m *Matrix) Cmp(m_ Matrix) bool {
 	if m.Rows() != m_.Rows() || m.Cols() != m_.Cols() {
