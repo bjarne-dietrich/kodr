@@ -1,4 +1,4 @@
-module github.com/itzmeanjan/kodr
+module github.com/bjarne-dietrich/kodr
 
 go 1.24
 
