@@ -17,7 +17,7 @@ type DiagonalPRLNCEncoder struct {
 // Instead of the coding Vector, CodedPiece().Vector contains the index of the piece as an Uvarint
 func (p *DiagonalPRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 
-	pieceID := p.GetCurrentPieceId()
+	pieceID := p.GetCurrentPieceIdAndIncrement()
 	pieceCount := p.PieceCount()
 
 	vector := DiagonalCodingVector(pieceID, pieceCount)
@@ -39,7 +39,6 @@ func (p *DiagonalPRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 		Vector: binary.AppendUvarint(nil, uint64(pieceID)),
 		Piece:  piece,
 	}
-	p.IncrementCurrentPieceId()
 	return codedPiece
 }
 

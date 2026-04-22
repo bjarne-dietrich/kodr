@@ -1,6 +1,8 @@
 package base
 
 import (
+	"sync"
+
 	"github.com/itzmeanjan/kodr/kodr_internals"
 )
 
@@ -8,36 +10,52 @@ type BaseEncoder struct {
 	currentPieceId uint
 	pieces         []kodr_internals.Piece
 	extra          uint
+	mutex          sync.RWMutex
 }
 
 // PieceCount returns total #-of pieces being coded together --- denoting
 // these many linearly independent pieces are required
 // successfully decoding back to original pieces
 func (e *BaseEncoder) PieceCount() uint {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 	return uint(len(e.pieces))
 }
 
 // PieceSize returns size of one piece
 // Total data being coded = pieceSize * pieceCount + padding
 func (e *BaseEncoder) PieceSize() uint {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 	return uint(len(e.pieces[0]))
 }
 
 // Padding returns the number of extra padding bytes added at end of original
 // data slice for making all pieces of same size
 func (e *BaseEncoder) Padding() uint {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 	return e.extra
 }
 
 func (e *BaseEncoder) GetCurrentPieceId() uint {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 	return e.currentPieceId
 }
 
-func (e *BaseEncoder) IncrementCurrentPieceId() {
+// GetCurrentPieceIdAndIncrement returns the current piece id and increments the internal counter by one
+func (e *BaseEncoder) GetCurrentPieceIdAndIncrement() uint {
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+	id := e.currentPieceId
 	e.currentPieceId++
+	return id
 }
 
 func (e *BaseEncoder) GetPiece(pieceId uint) *kodr_internals.Piece {
+	e.mutex.RLock()
+	defer e.mutex.RUnlock()
 	if pieceId < uint(len(e.pieces)) {
 		return &e.pieces[pieceId]
 	}

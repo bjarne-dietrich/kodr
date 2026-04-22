@@ -1,6 +1,8 @@
 package base
 
 import (
+	"sync"
+
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals"
 	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
@@ -9,6 +11,7 @@ import (
 type BaseDecoder struct {
 	expected, useful, received uint
 	state                      *matrix.DecoderState
+	mutex                      sync.RWMutex
 }
 
 // Each piece of N-many bytes
@@ -16,17 +19,22 @@ type BaseDecoder struct {
 // Note: If no pieces are yet added to decoder state, then
 // returns 0, denoting **unknown**
 func (d *BaseDecoder) PieceLength() uint {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 	return d.state.GetPieceLength()
 }
 
 func (d *BaseDecoder) GetExpectedPieceCount() uint {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 	return d.expected
 }
 
 // Already decoded back to original pieces, with collected pieces ?
-//
 // If yes, no more pieces need to be collected
 func (d *BaseDecoder) IsDecoded() bool {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 	return d.useful >= d.expected
 }
 
@@ -35,6 +43,8 @@ func (d *BaseDecoder) IsDecoded() bool {
 //
 // After collecting these many pieces, original data can be decoded
 func (d *BaseDecoder) Required() uint {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 	return d.expected - d.useful
 }
 
@@ -47,6 +57,8 @@ func (d *BaseDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
 	if d.IsDecoded() {
 		return kodr.ErrAllUsefulPiecesReceived
 	}
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 
 	d.state.AddPiece(piece)
 	d.received++
@@ -69,6 +81,8 @@ func (d *BaseDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
 // can be attempted to be consumed, given algebraic structure has revealed
 // requested piece at index `i`
 func (d *BaseDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 	return d.state.GetPiece(i)
 }
 
@@ -77,6 +91,9 @@ func (d *BaseDecoder) GetPieces() ([]kodr_internals.Piece, error) {
 	if !d.IsDecoded() {
 		return nil, kodr.ErrMoreUsefulPiecesRequired
 	}
+
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 
 	pieces := make([]kodr_internals.Piece, 0, d.useful)
 	for i := range d.useful {
