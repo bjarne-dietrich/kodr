@@ -14,3 +14,11 @@ func TestTrianglePseudoRLNCDecoderFlow(t *testing.T) {
 
 	testutils.BaseTestFlow(t, pseudo.NewTrianglePRLNCEncoder(pieces), pseudo.NewTrianglePRLNCDecoder(pieceCount), pieceCount, pieces)
 }
+
+func TestTrianglePseudoRLNCDecoderFlowSmall(t *testing.T) {
+	var pieceCount uint = 4
+	var pieceLength uint = 15
+	pieces := testutils.GeneratePieces(pieceCount, pieceLength)
+
+	testutils.BaseTestFlow(t, pseudo.NewTrianglePRLNCEncoder(pieces), pseudo.NewTrianglePRLNCDecoder(pieceCount), pieceCount, pieces)
+}

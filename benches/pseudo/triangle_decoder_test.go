@@ -10,6 +10,15 @@ import (
 )
 
 func BenchmarkTriangleRLNCDecoder(t *testing.B) {
+
+	t.Run("500k", func(b *testing.B) {
+		b.Run("2Pieces", func(b *testing.B) { decodeTriangle(b, 2, 1<<19) })
+		b.Run("3Pieces", func(b *testing.B) { decodeTriangle(b, 3, 1<<19) })
+		b.Run("4Pieces", func(b *testing.B) { decodeTriangle(b, 4, 1<<19) })
+		b.Run("15Pieces", func(b *testing.B) { decodeTriangle(b, 15, 1<<19) })
+		b.Run("77Pieces", func(b *testing.B) { decodeTriangle(b, 77, 1<<19) })
+	})
+
 	t.Run("1M", func(b *testing.B) {
 		b.Run("16Pieces", func(b *testing.B) { decodeTriangle(b, 1<<4, 1<<20) })
 		b.Run("32Pieces", func(b *testing.B) { decodeTriangle(b, 1<<5, 1<<20) })
