@@ -21,6 +21,8 @@ func DiagonalCodingVector(idx uint, pieceCount uint) kodr_internals.CodingVector
 		vector := make(kodr_internals.CodingVector, pieceCount)
 		vector[idx] = 1
 		return vector
+	} else if idx == pieceCount {
+		return slices.Repeat(kodr_internals.CodingVector{1}, int(pieceCount))
 	} else {
 		return nonPrimitiveCodingVector(idx, pieceCount)
 	}
@@ -57,9 +59,9 @@ func TriangleCodingVector(idx uint, pieceCount uint) kodr_internals.CodingVector
 			vector[i] = 1
 		}
 		return vector
-	} else {
-		return nonPrimitiveCodingVector(idx, pieceCount)
 	}
+
+	return nonPrimitiveCodingVector(idx, pieceCount)
 }
 
 // GetTriangleCodedPieceFromBytes expects a triangle coded piece as bytes
@@ -80,11 +82,8 @@ func GetTriangleCodedPieceFromBytes(bytes []byte, pieceCount uint) *kodr_interna
 // nonPrimitiveCodingVector returns a pseudo coding vector.
 func nonPrimitiveCodingVector(idx uint, pieceCount uint) kodr_internals.CodingVector {
 
-	// with n being p.PieceCount:
-	// Cn,j = {1}
-	// Cn (1 1 1 1 ...)
-	if idx == pieceCount {
-		return slices.Repeat(kodr_internals.CodingVector{1}, int(pieceCount))
+	if idx < pieceCount {
+		panic("non primitive coding vector called with idx < pieceCount")
 	}
 
 	// a ≥ 2, 0 ≤ k ≤ a-2 such that i = N+2+((a-1)*(a-2))/2 + k
@@ -92,8 +91,8 @@ func nonPrimitiveCodingVector(idx uint, pieceCount uint) kodr_internals.CodingVe
 
 	N := pieceCount
 
-	a := uint(math.Floor(1.5 + math.Sqrt(0.25+2*float64(idx-N-1))))
-	k := idx - N - 1 - (a-1)*(a-2)/2
+	a := uint(math.Floor(1.5 + math.Sqrt(0.25+2*float64(idx-N))))
+	k := idx - N - (a-1)*(a-2)/2
 
 	vector := make(kodr_internals.CodingVector, pieceCount)
 	for j := range vector {

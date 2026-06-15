@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	mathrand "math/rand"
+	"slices"
 	"testing"
 
 	"github.com/itzmeanjan/kodr"
@@ -137,4 +138,44 @@ func TestTrianglePseudoRLNCEncoder_Padding(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestSoundSymbols(t *testing.T) {
+
+	size := uint(2<<10 + mathrand.Intn(2<<10))
+	pieceCount := uint(8)
+	data := testutils.RandomData(size)
+
+	enc, err := pseudo.NewTrianglePRLNCEncoderWithPieceCount(data, pieceCount)
+	if err != nil {
+		t.Fatalf("Error: %s\n", err.Error())
+	}
+
+	pieces, _, err := kodr_internals.OriginalPiecesFromDataAndPieceCount(data, pieceCount)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	var pieceBuffer []byte
+
+	for i := range pieceCount {
+		c_piece := enc.CodedPiece()
+		if pieceBuffer == nil {
+			pieceBuffer = pieces[i]
+		} else {
+			for b := range pieceBuffer {
+				pieceBuffer[b] ^= pieces[i][b]
+			}
+		}
+		if !slices.Equal(pieceBuffer, c_piece.Piece) {
+			t.Fatal("decoded data doesn't match !")
+		}
+	}
+
+	// After the piece with all 1 (1,1,1,1) vector
+	// The next piece must not be equal (also all one vector)
+	c_piece := enc.CodedPiece()
+	if slices.Equal(pieceBuffer, c_piece.Piece) {
+		t.Fatal("wrong piece returned")
+	}
 }
