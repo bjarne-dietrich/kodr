@@ -7,4 +7,5 @@ type Decoder interface {
 	AddPieceBytes(pieceBytes []byte) error
 	GetPieces() ([]kodr_internals.Piece, error)
 	IsDecoded() bool
+	Required() uint
 }
