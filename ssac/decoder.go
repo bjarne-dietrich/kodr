@@ -31,6 +31,6 @@ func (p *SSACRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 	return p.BaseDecoder.AddPiece(codedPiece)
 }
 
-func NewSSACRLNCDecoder(pieceCount uint) *SSACRLNCDecoder {
-	return &SSACRLNCDecoder{BaseDecoder: *base.NewBaseDecoder(pieceCount), sparsityLevel: 3}
+func NewSSACRLNCDecoder(pieceCount uint, sparsityLevel uint) *SSACRLNCDecoder {
+	return &SSACRLNCDecoder{BaseDecoder: *base.NewBaseDecoder(pieceCount), sparsityLevel: sparsityLevel}
 }
