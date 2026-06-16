@@ -39,8 +39,8 @@ func TestNewSSACRLNC(t *testing.T) {
 		)
 
 		pieces := generatePieces(pieceCount, pieceLength)
-		enc := ssac.NewSSACRLNCEncoder(pieces)
-		dec := ssac.NewSSACRLNCDecoder(pieceCount)
+		enc := ssac.NewSSACRLNCEncoder(pieces, 3)
+		dec := ssac.NewSSACRLNCDecoder(pieceCount, 3)
 
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
@@ -50,7 +50,7 @@ func TestNewSSACRLNC(t *testing.T) {
 		pieceCount := uint(2<<1 + mathrand.Intn(2<<8))
 		data := generateData(size)
 
-		enc, err := ssac.NewSSACRLNCEncoderWithPieceCount(data, pieceCount)
+		enc, err := ssac.NewSSACRLNCEncoderWithPieceCount(data, pieceCount, 3)
 		if err != nil {
 			t.Fatalf("Error: %s\n", err.Error())
 		}
@@ -60,7 +60,7 @@ func TestNewSSACRLNC(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
-		dec := ssac.NewSSACRLNCDecoder(pieceCount)
+		dec := ssac.NewSSACRLNCDecoder(pieceCount, 3)
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
 
@@ -70,7 +70,7 @@ func TestNewSSACRLNC(t *testing.T) {
 		pieceCount := uint(math.Ceil(float64(size) / float64(pieceSize)))
 		data := generateData(size)
 
-		enc, err := ssac.NewSSACRLNCEncoderWithPieceSize(data, pieceSize)
+		enc, err := ssac.NewSSACRLNCEncoderWithPieceSize(data, pieceSize, 3)
 		if err != nil {
 			t.Fatalf("Error: %s\n", err.Error())
 		}
@@ -80,7 +80,7 @@ func TestNewSSACRLNC(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
-		dec := ssac.NewSSACRLNCDecoder(pieceCount)
+		dec := ssac.NewSSACRLNCDecoder(pieceCount, 3)
 		encoderFlow(t, enc, dec, pieceCount, pieces)
 	})
 }
@@ -121,7 +121,7 @@ func TestPseudoRLNCEncoder_Padding(t *testing.T) {
 			pieceCount := uint(2<<1 + mathrand.Intn(2<<8))
 			data := generateData(size)
 
-			enc, err := ssac.NewSSACRLNCEncoderWithPieceCount(data, pieceCount)
+			enc, err := ssac.NewSSACRLNCEncoderWithPieceCount(data, pieceCount, 3)
 			if err != nil {
 				t.Fatalf("Error: %s\n", err.Error())
 			}
@@ -142,7 +142,7 @@ func TestPseudoRLNCEncoder_Padding(t *testing.T) {
 			pieceCount := uint(math.Ceil(float64(size) / float64(pieceSize)))
 			data := generateData(size)
 
-			enc, err := ssac.NewSSACRLNCEncoderWithPieceSize(data, pieceSize)
+			enc, err := ssac.NewSSACRLNCEncoderWithPieceSize(data, pieceSize, 3)
 			if err != nil {
 				t.Fatalf("Error: %s\n", err.Error())
 			}

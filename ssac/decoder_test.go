@@ -16,8 +16,8 @@ func TestNewSSACRLNCDecoder(t *testing.T) {
 		pieceCount  uint                   = 128
 		pieceLength uint                   = 8192
 		pieces      []kodr_internals.Piece = generatePieces(pieceCount, pieceLength)
-		enc         *ssac.SSACRLNCEncoder  = ssac.NewSSACRLNCEncoder(pieces)
-		dec         *ssac.SSACRLNCDecoder  = ssac.NewSSACRLNCDecoder(pieceCount)
+		enc         *ssac.SSACRLNCEncoder  = ssac.NewSSACRLNCEncoder(pieces, 3)
+		dec         *ssac.SSACRLNCDecoder  = ssac.NewSSACRLNCDecoder(pieceCount, 3)
 	)
 
 	for {
