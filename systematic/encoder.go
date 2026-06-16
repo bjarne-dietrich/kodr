@@ -2,28 +2,12 @@ package systematic
 
 import (
 	"github.com/itzmeanjan/kodr/kodr_internals"
+	"github.com/itzmeanjan/kodr/kodr_internals/base"
 	"github.com/itzmeanjan/kodr/kodr_internals/operations"
 )
 
 type SystematicRLNCEncoder struct {
-	currentPieceId uint
-	pieces         []kodr_internals.Piece
-	extra          uint
-}
-
-// Total #-of pieces being coded together --- denoting
-// these many linearly independent pieces are required
-// successfully decoding back to original pieces
-func (s *SystematicRLNCEncoder) PieceCount() uint {
-	return uint(len(s.pieces))
-}
-
-// Pieces which are coded together are all same size
-//
-// Total data being coded = pieceSize * pieceCount ( may include
-// some padding bytes )
-func (s *SystematicRLNCEncoder) PieceSize() uint {
-	return uint(len(s.pieces[0]))
+	base.BaseEncoder
 }
 
 // How many bytes of data, constructed by concatenating
@@ -47,13 +31,6 @@ func (s *SystematicRLNCEncoder) DecodableLen() uint {
 // being coded together
 func (s *SystematicRLNCEncoder) CodedPieceLen() uint {
 	return s.PieceCount() + s.PieceSize()
-}
-
-// If any extra padding bytes added at end of original
-// data slice for making all pieces of same size,
-// returned value will be >0
-func (s *SystematicRLNCEncoder) Padding() uint {
-	return s.extra
 }
 
 // Generates a systematic coded piece's coding vector, which has
@@ -81,26 +58,29 @@ func (s *SystematicRLNCEncoder) systematicCodingVector(idx uint) kodr_internals.
 // Later pieces are coded as they're done in Full RLNC scheme
 // `i` keeps incrementing by +1, until it reaches N
 func (s *SystematicRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
-	if s.currentPieceId < s.PieceCount() {
+
+	pieceID := s.GetCurrentPieceIdAndIncrement()
+	pieceCount := s.PieceCount()
+
+	if pieceID < pieceCount {
 		// `nil` coding vector can be returned, which is
 		// not being checked at all, as in that case we'll
 		// never get into `if` branch
-		vector := s.systematicCodingVector(s.currentPieceId)
+		vector := s.systematicCodingVector(pieceID)
 		piece := make(kodr_internals.Piece, s.PieceSize())
-		copy(piece, s.pieces[s.currentPieceId])
+		copy(piece, *s.GetPiece(pieceID))
 
-		s.currentPieceId++
 		return &kodr_internals.CodedPiece{
 			Vector: vector,
 			Piece:  piece,
 		}
 	}
 
-	vector := kodr_internals.GenerateCodingVector(s.PieceCount())
+	vector := kodr_internals.GenerateCodingVector(pieceCount)
 	piece := make(kodr_internals.Piece, s.PieceSize())
 
-	for i := range s.pieces {
-		operations.MulAddConst(piece, s.pieces[i], vector[i])
+	for i := range pieceCount {
+		operations.MulAddConst(piece, *s.GetPiece(i), vector[i])
 	}
 
 	return &kodr_internals.CodedPiece{
@@ -114,7 +94,7 @@ func (s *SystematicRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 // for creating one systematic RLNC encoder, which delivers coded pieces
 // on-the-fly
 func NewSystematicRLNCEncoder(pieces []kodr_internals.Piece) *SystematicRLNCEncoder {
-	return &SystematicRLNCEncoder{currentPieceId: 0, pieces: pieces}
+	return &SystematicRLNCEncoder{*base.NewBaseEncoder(pieces)}
 }
 
 // If you know #-of pieces you want to code together, invoking
@@ -122,26 +102,20 @@ func NewSystematicRLNCEncoder(pieces []kodr_internals.Piece) *SystematicRLNCEnco
 // bytes appended at end of last piece, if required & prepares
 // full RLNC encoder for obtaining coded pieces
 func NewSystematicRLNCEncoderWithPieceCount(data []byte, pieceCount uint) (*SystematicRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceCount(data, pieceCount)
+	encoder, err := base.NewBaseEncoderWithPieceCount(data, pieceCount)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewSystematicRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &SystematicRLNCEncoder{*encoder}, nil
 }
 
 // If you want to have N-bytes piece size for each, this
 // function generates M-many pieces each of N-bytes size, which are ready
 // to be coded together with full RLNC
 func NewSystematicRLNCEncoderWithPieceSize(data []byte, pieceSize uint) (*SystematicRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceSize(data, pieceSize)
+	encoder, err := base.NewBaseEncoderWithPieceSize(data, pieceSize)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewSystematicRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &SystematicRLNCEncoder{*encoder}, nil
 }

@@ -3,93 +3,32 @@ package full
 import (
 	"github.com/itzmeanjan/kodr"
 	"github.com/itzmeanjan/kodr/kodr_internals"
-	"github.com/itzmeanjan/kodr/kodr_internals/matrix/v2"
+	"github.com/itzmeanjan/kodr/kodr_internals/base"
 )
 
 type FullRLNCDecoder struct {
-	expected, useful, received uint
-	state                      *matrix.DecoderState
+	base.BaseDecoder
 }
 
-// PieceLength - Returns piece length in bytes
-//
-// If no pieces are yet added to decoder state, then
-// returns 0, denoting **unknown**
-func (d *FullRLNCDecoder) PieceLength() uint {
-	return d.state.GetPieceLength()
-}
-
-// IsDecoded - Use it for checking whether more piece
-// collection is required or not
-//
-// If it returns false, denotes more linearly independent pieces
-// need to be collected, only then decoding can be completed
-func (d *FullRLNCDecoder) IsDecoded() bool {
-	return d.useful >= d.expected
-}
-
-// Required - How many more linearly independent pieces
-// are required for successfully decoding pieces ?
-func (d *FullRLNCDecoder) Required() uint {
-	return d.expected - d.useful
-}
-
-// AddPiece - Adds a new received coded piece along with
-// coding vector. After every new coded piece reception
-// augmented matrix ( coding vector + coded piece )
-// is rref-ed, to keep it as ready as possible for consuming
-// decoded pieces
-//
-// Note: As soon as all pieces are decoded, no more calls to
-// this method does anything useful --- so better check for error & proceed !
-func (d *FullRLNCDecoder) AddPiece(piece *kodr_internals.CodedPiece) error {
-	// good time to start reading decoded pieces
+// AddPieceBytes tries to parse a kodr_internals.CodedPiece from piceBytes
+// and adds it to the decoder.
+func (d *FullRLNCDecoder) AddPieceBytes(pieceBytes []byte) error {
 	if d.IsDecoded() {
 		return kodr.ErrAllUsefulPiecesReceived
 	}
 
-	d.state.AddPiece(piece)
-	d.received++
-	if !(d.received > 1) {
-		d.useful++
-		return nil
-	}
+	expected := d.GetExpectedPieceCount()
+	pieceLength := d.PieceLength()
 
-	d.useful = d.state.CalculateRank()
-	return nil
-}
-
-// GetPiece - Get a decoded piece by index, may ( not ) succeed !
-//
-// Note: It's not necessary that full decoding needs to happen
-// for this method to return something useful
-//
-// If M-many pieces are received among N-many expected ( read M <= N )
-// then pieces with index in [0...M] ( remember upper bound exclusive )
-// can be attempted to be consumed, given algebraic structure has revealed
-// requested piece at index `i`
-func (d *FullRLNCDecoder) GetPiece(i uint) (kodr_internals.Piece, error) {
-	return d.state.GetPiece(i)
-}
-
-// GetPieces - Get a list of all decoded pieces, given full
-// decoding has happened
-func (d *FullRLNCDecoder) GetPieces() ([]kodr_internals.Piece, error) {
-	if !d.IsDecoded() {
-		return nil, kodr.ErrMoreUsefulPiecesRequired
-	}
-
-	pieces := make([]kodr_internals.Piece, 0, d.useful)
-	for i := range d.useful {
-		// error mustn't happen at this point, it should
-		// have been returned from very first `if-block` in function
-		piece, err := d.GetPiece(uint(i))
-		if err != nil {
-			return nil, err
+	if pieceLength != 0 {
+		if len(pieceBytes) != int(pieceLength)+int(expected) {
+			return kodr.ErrCodedDataLengthMismatch
 		}
-		pieces = append(pieces, piece)
 	}
-	return pieces, nil
+
+	codedPiece := &kodr_internals.CodedPiece{Vector: pieceBytes[:expected], Piece: pieceBytes[expected:]}
+
+	return d.AddPiece(codedPiece)
 }
 
 // If minimum #-of linearly independent coded pieces required
@@ -101,6 +40,5 @@ func (d *FullRLNCDecoder) GetPieces() ([]kodr_internals.Piece, error) {
 // which is generally equal to original #-of pieces, decoded pieces
 // can be read back
 func NewFullRLNCDecoder(pieceCount uint) *FullRLNCDecoder {
-	state := matrix.NewDecoderStateWithPieceCount(pieceCount)
-	return &FullRLNCDecoder{expected: pieceCount, state: state}
+	return &FullRLNCDecoder{*base.NewBaseDecoder(pieceCount)}
 }

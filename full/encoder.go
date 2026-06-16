@@ -2,27 +2,12 @@ package full
 
 import (
 	"github.com/itzmeanjan/kodr/kodr_internals"
+	"github.com/itzmeanjan/kodr/kodr_internals/base"
 	"github.com/itzmeanjan/kodr/kodr_internals/operations"
 )
 
 type FullRLNCEncoder struct {
-	pieces []kodr_internals.Piece
-	extra  uint
-}
-
-// Total #-of pieces being coded together --- denoting
-// these many linearly independent pieces are required
-// successfully decoding back to original pieces
-func (f *FullRLNCEncoder) PieceCount() uint {
-	return uint(len(f.pieces))
-}
-
-// Pieces which are coded together are all same size
-//
-// Total data being coded = pieceSize * pieceCount ( may include
-// some padding bytes )
-func (f *FullRLNCEncoder) PieceSize() uint {
-	return uint(len(f.pieces[0]))
+	base.BaseEncoder
 }
 
 // How many bytes of data, constructed by concatenating
@@ -48,23 +33,20 @@ func (f *FullRLNCEncoder) CodedPieceLen() uint {
 	return f.PieceCount() + f.PieceSize()
 }
 
-// How many extra padding bytes added at end of
-// original data slice so that split pieces are
-// all of same size ?
-func (f *FullRLNCEncoder) Padding() uint {
-	return f.extra
-}
-
 // Returns a coded piece, which is constructed on-the-fly
 // by randomly drawing elements from finite field i.e.
 // coding coefficients & performing full-RLNC with
 // all original pieces
 func (f *FullRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
-	vector := kodr_internals.GenerateCodingVector(f.PieceCount())
+
+	_ = f.GetCurrentPieceIdAndIncrement()
+	pieceCount := f.PieceCount()
+
+	vector := kodr_internals.GenerateCodingVector(pieceCount)
 	piece := make(kodr_internals.Piece, f.PieceSize())
 
-	for i := range f.pieces {
-		operations.MulAddConst(piece, f.pieces[i], vector[i])
+	for i := range pieceCount {
+		operations.MulAddConst(piece, *f.GetPiece(i), vector[i])
 	}
 
 	return &kodr_internals.CodedPiece{
@@ -77,7 +59,7 @@ func (f *FullRLNCEncoder) CodedPiece() *kodr_internals.CodedPiece {
 // & get encoder, to be used for on-the-fly generation
 // to N-many coded pieces
 func NewFullRLNCEncoder(pieces []kodr_internals.Piece) *FullRLNCEncoder {
-	return &FullRLNCEncoder{pieces: pieces}
+	return &FullRLNCEncoder{*base.NewBaseEncoder(pieces)}
 }
 
 // If you know #-of pieces you want to code together, invoking
@@ -85,26 +67,20 @@ func NewFullRLNCEncoder(pieces []kodr_internals.Piece) *FullRLNCEncoder {
 // bytes appended at end of last piece, if required & prepares
 // full RLNC encoder for obtaining coded pieces
 func NewFullRLNCEncoderWithPieceCount(data []byte, pieceCount uint) (*FullRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceCount(data, pieceCount)
+	encoder, err := base.NewBaseEncoderWithPieceCount(data, pieceCount)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewFullRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &FullRLNCEncoder{*encoder}, nil
 }
 
 // If you want to have N-bytes piece size for each, this
 // function generates M-many pieces each of N-bytes size, which are ready
 // to be coded together with full RLNC
 func NewFullRLNCEncoderWithPieceSize(data []byte, pieceSize uint) (*FullRLNCEncoder, error) {
-	pieces, padding, err := kodr_internals.OriginalPiecesFromDataAndPieceSize(data, pieceSize)
+	encoder, err := base.NewBaseEncoderWithPieceSize(data, pieceSize)
 	if err != nil {
 		return nil, err
 	}
-
-	enc := NewFullRLNCEncoder(pieces)
-	enc.extra = padding
-	return enc, nil
+	return &FullRLNCEncoder{*encoder}, nil
 }
